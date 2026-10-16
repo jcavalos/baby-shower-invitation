@@ -1,0 +1,211 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════
+   GUÍA RÁPIDA DE COLORES Y TIPOGRAFÍA
+   ═══════════════════════════════════════════════════════════════
+   Todo el sitio usa ESTAS variables. Si quieres cambiar un color,
+   cámbialo AQUÍ (una sola vez) y se actualiza en todo el sitio,
+   sin tener que editar cada componente.
+
+   PALETA (de clara a oscura):
+   --color-cream        fondo general de la página (rosa casi blanco)
+   --color-cream-dark    fondo de tarjetas/paneles (rosa muy pálido)
+   --color-sand          bordes suaves, detalles chicos (rosa medio)
+   --color-sand-dark     bordes con más contraste (rosa medio-fuerte)
+   --color-clay          texto destacado / botón principal claro
+                         (usado en: "BABY", etiquetas en cursiva tipo
+                         "nos vemos en", "confirma tu asistencia")
+   --color-cocoa         texto de párrafos normales
+   --color-cocoa-deep    texto fuerte / fondo de botones oscuros
+   --color-sage          texto script secundario, claro (poco usado)
+   --color-sage-dark     texto script principal (nombre de la bebé,
+                         "¡Te esperamos!", nombre del salón)
+   --color-cloud         color de relleno de nubes (si usaras SVG)
+   --color-cloud-edge    contorno de nubes
+
+   --color-balloon-1..5  los 5 tonos pastel que se usan al azar en
+                         los globos animados de fondo (RisingBalloons)
+                         y en la ráfaga de "confirmar asistencia"
+                         (BalloonBurst). Cambia estos 5 para variar
+                         la paleta de globos decorativos.
+
+   ESCALA DE TIPOGRAFÍA (para que todo el texto se vea homogéneo):
+   Usa estas combinaciones de clases de Tailwind según el tipo de
+   texto — así evitamos que "unas letras se vean más grandes que
+   otras" sin motivo. Los componentes ya las usan; esta lista es
+   para cuando quieras AGREGAR texto nuevo o cambiar el tamaño de
+   algo existente.
+
+     rol                  clases sugeridas                                  dónde se usa
+     ──────────────────── ────────────────────────────────────────────────  ─────────────────────────────
+     título hero ("BABY")  text-[clamp(3.5rem,18vw,9rem)] font-bold          Hero.jsx
+     script hero (nombre)  text-5xl sm:text-6xl font-[var(--font-script)]   Hero.jsx
+     script secundario     text-3xl sm:text-4xl font-[var(--font-script)]   Footer.jsx, LocationSection.jsx
+     etiqueta cursiva      text-base sm:text-lg italic                      Countdown, LocationSection,
+                          font-[var(--font-display)]                        RSVPForm, PhotoAlbum
+     párrafo / cuerpo      text-sm sm:text-base                             mensajes, descripciones
+     etiqueta chica        text-xs uppercase tracking-widest                "SÁBADO", "a las", unidades
+     botones                text-sm tracking-wide                           todos los botones
+
+   Todas estas clases van directo en el JSX de cada componente —
+   busca los comentarios "TAMAÑO:" y "COLOR:" en cada archivo .jsx
+   para ubicar rápido qué tocar.
+   ═══════════════════════════════════════════════════════════════ */
+@theme {
+  --font-display: "Playfair Display", "Georgia", serif;
+  --font-script: "Dancing Script", cursive;
+  --font-body: "Mulish", "Segoe UI", sans-serif;
+
+  --color-cream: #fff6f8;
+  --color-cream-dark: #ffe9f0;
+  --color-sand: #ffb8ce;
+  --color-sand-dark: #ff8fb0;
+  --color-clay: #ee6a97;
+  --color-cocoa: #8a4664;
+  --color-cocoa-deep: #642f4a;
+  --color-sage: #c79fdb;
+  --color-sage-dark: #a374c4;
+  --color-cloud: #ffffff;
+  --color-cloud-edge: #f7c3d6;
+
+  /* paleta de globos decorativos — cambia estos 5 tonos para variar
+     el color de los globos que suben de fondo y la ráfaga de RSVP */
+  --color-balloon-1: #ffb3c6;
+  --color-balloon-2: #ffd6e6;
+  --color-balloon-3: #d9b8ec;
+  --color-balloon-4: #ffe3c2;
+  --color-balloon-5: #ffc9de;
+}
+
+html {
+  scroll-behavior: smooth;
+  width: 100%;
+  overflow-x: hidden; /* evita scroll horizontal en celulares */
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-cream);
+  color: var(--color-cocoa-deep);
+  width: 100%;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* sombra suave para que las nubes/imágenes se noten sobre el fondo */
+.cloud-shadow {
+  filter: drop-shadow(0 10px 14px rgba(238, 106, 151, 0.18));
+}
+
+/* ───────────────── Nubes: deriva horizontal lenta ───────────────── */
+@keyframes drift {
+  0%   { transform: translateX(-6%); }
+  50%  { transform: translateX(4%); }
+  100% { transform: translateX(-6%); }
+}
+.cloud-drift-slow  { animation: drift 46s ease-in-out infinite; }
+.cloud-drift-mid   { animation: drift 34s ease-in-out infinite reverse; }
+.cloud-drift-fast  { animation: drift 24s ease-in-out infinite; }
+
+/* ───────────────── Osito: pequeño rebote/mecida (usado en UploadPhoto) ───────────────── */
+@keyframes bob {
+  0%   { transform: translateY(0px) rotate(-1.5deg); }
+  50%  { transform: translateY(-14px) rotate(1.5deg); }
+  100% { transform: translateY(0px) rotate(-1.5deg); }
+}
+.bear-bob {
+  animation: bob 5.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* ───────────────── Balanceo del ícono de música al reproducir ───────────────── */
+@keyframes sway {
+  0%, 100% { transform: rotate(-2deg); }
+  50%      { transform: rotate(2deg); }
+}
+.sway { animation: sway 4s ease-in-out infinite; transform-origin: top center; }
+
+/* ───────────────── Estrellitas titilando en los fondos ───────────────── */
+@keyframes twinkle {
+  0%, 100% { opacity: .25; transform: scale(0.85); }
+  50%      { opacity: 1;   transform: scale(1.1); }
+}
+.twinkle { animation: twinkle 3.2s ease-in-out infinite; }
+
+/* ───────────────── Aparición del texto en el Hero al abrir el sobre ───────────────── */
+@keyframes float-up {
+  0%   { transform: translateY(10px); opacity: 0; }
+  100% { transform: translateY(0);    opacity: 1; }
+}
+.float-in { animation: float-up .9s ease-out both; }
+
+/* ───────────────── Osito + canasta + globos flotando por el Hero ─────────────────
+   Amplitud del movimiento: los porcentajes son relativos al propio
+   tamaño del elemento. Si quieres que se mueva MÁS, sube los valores
+   de translate; si se ve muy inquieto, bájalos. */
+@keyframes fly {
+  0%   { transform: translate(0, 0) rotate(-1.5deg); }
+  20%  { transform: translate(2.5%, -2%) rotate(1deg); }
+  40%  { transform: translate(-2%, -4%) rotate(-0.8deg); }
+  60%  { transform: translate(-3%, -1.5%) rotate(1.2deg); }
+  80%  { transform: translate(2%, -3%) rotate(-1deg); }
+  100% { transform: translate(0, 0) rotate(-1.5deg); }
+}
+.fly-around { animation: fly 14s ease-in-out infinite; }
+
+/* ───────────────── Rebote al tocar el osito ───────────────── */
+@keyframes pop-bounce {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(0.92); }
+  55%  { transform: scale(1.08); }
+  75%  { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+.pop-bounce { animation: pop-bounce 0.6s ease-out; }
+
+/* ───────────────── Globos ambientales subiendo de fondo (RisingBalloons) ───────────────── */
+@keyframes rise {
+  0%   { transform: translateY(0) translateX(0) rotate(-4deg); opacity: 0; }
+  8%   { opacity: .85; }
+  92%  { opacity: .85; }
+  100% { transform: translateY(-115vh) translateX(3%) rotate(4deg); opacity: 0; }
+}
+.balloon-rise { animation-name: rise; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+
+/* ───────────────── Aparición suave de cada sección al hacer scroll ───────────────── */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(26px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.reveal {
+  opacity: 0;
+  animation: reveal-up 0.9s cubic-bezier(.2,.7,.3,1) forwards;
+}
+
+/* ───────────────── Ráfaga de globitos al confirmar asistencia ───────────────── */
+@keyframes burst-out {
+  0%   { transform: translate(0, 0) scale(0.3); opacity: 0; }
+  15%  { opacity: 1; }
+  100% { transform: translate(var(--bx, 40px), var(--by, -120px)) scale(1); opacity: 0; }
+}
+.burst-balloon { animation: burst-out 1.3s ease-out forwards; }
+
+/* accesibilidad: si el usuario pidió "reducir movimiento" en su
+   sistema operativo, apagamos todas las animaciones */
+@media (prefers-reduced-motion: reduce) {
+  .cloud-drift-slow, .cloud-drift-mid, .cloud-drift-fast,
+  .bear-bob, .sway, .twinkle, .float-in,
+  .fly-around, .balloon-rise, .reveal, .burst-balloon {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}
+
+/* Barra de scroll a juego con la paleta */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--color-cream); }
+::-webkit-scrollbar-thumb { background: var(--color-sand); border-radius: 999px; }

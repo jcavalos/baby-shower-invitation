@@ -1,0 +1,34 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ⚠️ Cambia por el correo con el que creaste tu usuario admin.
+    // (No basta "estar logueado": cualquiera podría registrarse.)
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'TU_CORREO@gmail.com';
+    }
+
+    // Una familia solo se lee conociendo su link único; la lista completa solo el admin.
+    match /families/{id} {
+      allow get: if true;
+      allow list, create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'confirmedGuests', 'comment', 'respondedAt'])
+        && request.resource.data.status in ['si', 'no']
+        && request.resource.data.confirmedGuests is int
+        && request.resource.data.confirmedGuests >= 0
+        && request.resource.data.confirmedGuests <= resource.data.maxGuests
+        && request.resource.data.comment.size() <= 500
+      );
+    }
+
+    // Álbum: todos ven y agregan fotos (solo links de Cloudinary); nadie edita ni borra.
+    match /events/{eventId}/photos/{doc} {
+      allow read: if true;
+      allow create: if request.resource.data.url.matches('https://res.cloudinary.com/.*')
+                    && request.resource.data.uploaderName.size() <= 60;
+      allow update, delete: if isAdmin();
+    }
+  }
+}
