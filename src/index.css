@@ -195,7 +195,7 @@ body {
 .burst-balloon { animation: burst-out 1.3s ease-out forwards; }
 
 /* accesibilidad: si el usuario pidió "reducir movimiento" en su
-   sistema operativo, apagamos todas las animaciones */
+   sistema operativo, apagamos todas las animaciones 
 @media (prefers-reduced-motion: reduce) {
   .cloud-drift-slow, .cloud-drift-mid, .cloud-drift-fast,
   .bear-bob, .sway, .twinkle, .float-in,
@@ -204,6 +204,7 @@ body {
     opacity: 1 !important;
   }
 }
+  */
 
 /* Barra de scroll a juego con la paleta */
 ::-webkit-scrollbar { width: 10px; }
