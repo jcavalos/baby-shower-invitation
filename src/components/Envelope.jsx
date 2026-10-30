@@ -22,7 +22,7 @@ import "./Envelope.css";
  *  Globos (colores) ........... illustrations/balloonPalettes.js
  */
 const MONOGRAM = ["A", "S"];
-const TITLE = "¡Estás invitados!";
+const TITLE = "¡Estan invitados!";
 const CTA = "TOCA PARA ABRIR";
 
 /** Orquídea (imagen) con posición, giro y un balanceo muy suave. */
