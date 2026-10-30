@@ -1,4 +1,3 @@
-
 import {
   collection,
   doc,
@@ -6,6 +5,7 @@ import {
   getDocs,
   setDoc,
   updateDoc,
+  deleteDoc,
   onSnapshot,
   serverTimestamp,
 } from "firebase/firestore";
@@ -43,19 +43,19 @@ export async function saveRSVP(id, { status, guests, comment }) {
 
 // Generador de IDs para familias nuevas
 const slug = (name) =>
-  name.normalize("NFD")
+  name
+    .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 
-const normalize = (name) =>
-  slug(name);
+const normalize = (name) => slug(name);
 
 export const makeId = (name) =>
   `${slug(name)}-${crypto.randomUUID().slice(0, 8)}`;
 
-// Crear una familia manualmente (se conserva por compatibilidad)
+// Agregar una familia manualmente
 export const createFamily = ({ name, side, max }) =>
   setDoc(doc(db, "families", makeId(name)), {
     name,
@@ -66,7 +66,10 @@ export const createFamily = ({ name, side, max }) =>
     comment: "",
   });
 
-// NUEVO: sincronizar guests.js con Firebase
+// Borrar una familia
+export const deleteFamily = (id) => deleteDoc(doc(db, "families", id));
+
+// Sincronizar guests.js con Firebase
 export async function syncFamiliesFromGuests(guests) {
   if (!isFirebaseConfigured) {
     throw new Error("Firebase no está configurado.");
@@ -82,8 +85,7 @@ export async function syncFamiliesFromGuests(guests) {
   let created = 0;
   let updated = 0;
 
-  const nameKey = (name, side) =>
-    `${side}:${normalize(name)}`;
+  const nameKey = (name, side) => `${side}:${normalize(name)}`;
 
   for (const guest of guests) {
     const name = guest.name.trim();
@@ -91,18 +93,21 @@ export async function syncFamiliesFromGuests(guests) {
     const maxGuests = Number(guest.max);
     const sourceId = guest.id || null;
 
-    if (!name || !["rosa", "azul"].includes(side) ||
-        !Number.isInteger(maxGuests) || maxGuests < 1) {
+    if (
+      !name ||
+      !["rosa", "azul"].includes(side) ||
+      !Number.isInteger(maxGuests) ||
+      maxGuests < 1
+    ) {
       throw new Error(`Datos inválidos para la familia: ${guest.name}`);
     }
 
-    const matches = existing.filter((f) =>
-      !used.has(f.id) &&
-      (
-        (sourceId && f.sourceId === sourceId) ||
-        (!sourceId && nameKey(f.name, f.side) === nameKey(name, side)) ||
-        (sourceId && nameKey(f.name, f.side) === nameKey(name, side))
-      )
+    const matches = existing.filter(
+      (f) =>
+        !used.has(f.id) &&
+        ((sourceId && f.sourceId === sourceId) ||
+          (!sourceId && nameKey(f.name, f.side) === nameKey(name, side)) ||
+          (sourceId && nameKey(f.name, f.side) === nameKey(name, side)))
     );
 
     if (matches.length > 1) {
@@ -117,16 +122,20 @@ export async function syncFamiliesFromGuests(guests) {
     if (found) {
       used.add(found.id);
 
-      await setDoc(doc(db, "families", found.id), {
-        name,
-        side,
-        maxGuests,
-        ...(sourceId ? { sourceId } : {}),
-      }, { merge: true });
+      await setDoc(
+        doc(db, "families", found.id),
+        {
+          name,
+          side,
+          maxGuests,
+          ...(sourceId ? { sourceId } : {}),
+        },
+        { merge: true }
+      );
 
       updated++;
     } else {
-      // Una familia nueva recibe un ID estable del archivo guests.js.
+      // Una familia nueva recibe un ID estable.
       const id = sourceId || `${side}-${slug(name)}`;
 
       if (existing.some((f) => f.id === id)) {
