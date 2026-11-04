@@ -31,5 +31,5 @@ export const GUESTS = [
   { name: "Rhode Velazco", side: "azul", max: 2 },
   { name: "Jerry Peralta", side: "azul", max: 2 },
   { name: "Andrea Yañez", side: "azul", max: 2 },
-  { name: "Rosa Castro", side: "azul", max: 2 },
+  { name: "Rosa Castillo", side: "azul", max: 3 },
 ];
