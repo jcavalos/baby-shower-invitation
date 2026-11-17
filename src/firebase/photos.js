@@ -1,7 +1,9 @@
 import {
   collection, addDoc, onSnapshot, query, orderBy, serverTimestamp,
+  doc, deleteDoc,
 } from "firebase/firestore";
 import { db } from "./config";
+import { auth } from "./auth";
 import eventData from "../data/eventData";
 
 // Fotos: se suben a Cloudinary (gratis, sin tarjeta) y la URL se guarda en
@@ -40,7 +42,7 @@ export async function uploadEventPhoto(file, uploaderName = "", onProgress) {
   body.append("file", await compress(file));
   body.append("upload_preset", PRESET);
 
-  const url = await new Promise((resolve, reject) => {
+  const result = await new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`);
     xhr.upload.onprogress = (e) =>
@@ -48,7 +50,9 @@ export async function uploadEventPhoto(file, uploaderName = "", onProgress) {
     xhr.onload = () => {
       try {
         const res = JSON.parse(xhr.responseText);
-        xhr.status < 300 && res.secure_url ? resolve(res.secure_url) : reject(new Error(res.error?.message || "upload-failed"));
+        xhr.status < 300 && res.secure_url
+          ? resolve(res)
+          : reject(new Error(res.error?.message || "upload-failed"));
       } catch (e) { reject(e); }
     };
     xhr.onerror = () => reject(new Error("network"));
@@ -56,14 +60,32 @@ export async function uploadEventPhoto(file, uploaderName = "", onProgress) {
   });
 
   await addDoc(photosCollection(), {
-    url,
+    url: result.secure_url,
+    publicId: result.public_id,
     uploaderName: uploaderName.trim().slice(0, 60) || "Invitado",
     createdAt: serverTimestamp(),
   });
-  return url;
+  return result.secure_url;
 }
 
 export function subscribeToPhotos(callback) {
   const q = query(photosCollection(), orderBy("createdAt", "desc"));
   return onSnapshot(q, (s) => callback(s.docs.map((d) => ({ id: d.id, ...d.data() }))));
+}
+
+/** Solo admin: borra el archivo en Cloudinary (si se conoce) y el registro. */
+export async function deleteEventPhoto(photo) {
+  if (photo.publicId) {
+    const token = await auth.currentUser.getIdToken();
+    const res = await fetch("/api/delete-photo", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ publicId: photo.publicId }),
+    });
+    if (!res.ok) throw new Error("No se pudo borrar el archivo en Cloudinary.");
+  }
+  await deleteDoc(doc(db, "events", eventData.eventId, "photos", photo.id));
 }

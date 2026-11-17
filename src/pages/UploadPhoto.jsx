@@ -14,7 +14,8 @@ export default function UploadPhoto() {
   const [progress, setProgress] = useState(null);
   const [status, setStatus] = useState("idle"); // idle | uploading | done | error
   const [photos, setPhotos] = useState([]);
-  const inputRef = useRef(null);
+  const galleryRef = useRef(null);
+  const cameraRef = useRef(null);
 
   useEffect(() => {
     if (!isFirebaseConfigured) return;
@@ -22,13 +23,15 @@ export default function UploadPhoto() {
     return unsubscribe;
   }, []);
 
-  const handleFiles = async (fileList) => {
+  const handleFiles = async (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = ""; // permite volver a elegir la misma foto
+    if (files.length === 0) return;
+
     if (!isFirebaseConfigured) {
       setStatus("error");
       return;
     }
-    const files = Array.from(fileList);
-    if (files.length === 0) return;
 
     setStatus("uploading");
     try {
@@ -76,27 +79,43 @@ export default function UploadPhoto() {
           className="mt-6 w-full rounded-lg border border-[var(--color-sand)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--color-clay)]"
         />
 
-        {/* input de archivo oculto — "capture=environment" abre
-            directo la cámara trasera en celulares que lo soportan */}
+        {/* Galería: SIN capture, así el celular ofrece la galería */}
         <input
-          ref={inputRef}
+          ref={galleryRef}
           type="file"
           accept="image/*"
           multiple
+          className="hidden"
+          onChange={handleFiles}
+        />
+        {/* Cámara: CON capture, abre la cámara directo */}
+        <input
+          ref={cameraRef}
+          type="file"
+          accept="image/*"
           capture="environment"
           className="hidden"
-          onChange={(e) => handleFiles(e.target.files)}
+          onChange={handleFiles}
         />
 
-        <button
-          onClick={() => inputRef.current?.click()}
-          disabled={status === "uploading"}
-          className="mt-4 w-full rounded-full bg-[var(--color-cocoa-deep)] py-3 text-sm tracking-wide text-[var(--color-cream)] transition-opacity hover:opacity-90 disabled:opacity-60"
-        >
-          {status === "uploading"
-            ? `Subiendo... ${progress ?? 0}%`
-            : "📸 Elegir o tomar foto"}
-        </button>
+        <div className="mt-4 flex flex-col gap-2">
+          <button
+            onClick={() => galleryRef.current?.click()}
+            disabled={status === "uploading"}
+            className="w-full rounded-full bg-[var(--color-cocoa-deep)] py-3 text-sm tracking-wide text-[var(--color-cream)] transition-opacity hover:opacity-90 disabled:opacity-60"
+          >
+            {status === "uploading"
+              ? `Subiendo... ${progress ?? 0}%`
+              : "🖼️ Elegir de la galería"}
+          </button>
+          <button
+            onClick={() => cameraRef.current?.click()}
+            disabled={status === "uploading"}
+            className="w-full rounded-full border border-[var(--color-cocoa-deep)] py-3 text-sm tracking-wide text-[var(--color-cocoa-deep)] disabled:opacity-60"
+          >
+            📸 Tomar foto
+          </button>
+        </div>
 
         {status === "done" && (
           <p className="mt-3 text-sm text-[var(--color-sage-dark)]">

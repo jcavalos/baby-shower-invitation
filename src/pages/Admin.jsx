@@ -12,6 +12,7 @@ import {
   createFamily,
   deleteFamily,
 } from "../firebase/rsvp";
+import { subscribeToPhotos, deleteEventPhoto, thumb } from "../firebase/photos";
 
 import { GUESTS } from "../data/guests";
 import eventData, { siteUrl } from "../data/eventData";
@@ -27,6 +28,7 @@ const linkOf = (id) => `${siteUrl}/?f=${id}`;
 export default function Admin() {
   const [user, setUser] = useState(undefined);
   const [families, setFamilies] = useState([]);
+  const [photos, setPhotos] = useState([]);
 
   const [cred, setCred] = useState({ email: "", pass: "" });
 
@@ -52,6 +54,12 @@ export default function Admin() {
   useEffect(() => {
     if (!user) return;
     return subscribeToFamilies(setFamilies);
+  }, [user]);
+
+  // Escuchar fotos del álbum
+  useEffect(() => {
+    if (!user) return;
+    return subscribeToPhotos(setPhotos);
   }, [user]);
 
   // Estadísticas
@@ -159,6 +167,17 @@ export default function Admin() {
     } catch (error) {
       console.error("Error al borrar familia:", error);
       setSyncMessage(`No se pudo borrar: ${error.message}`);
+    }
+  };
+
+  // Borrar foto del álbum
+  const borrarFoto = async (p) => {
+    if (!window.confirm("¿Borrar esta foto del álbum?")) return;
+    try {
+      await deleteEventPhoto(p);
+    } catch (error) {
+      console.error("Error al borrar foto:", error);
+      setSyncMessage(`No se pudo borrar la foto: ${error.message}`);
     }
   };
 
@@ -388,6 +407,34 @@ export default function Admin() {
           </li>
         ))}
       </ul>
+
+      {/* FOTOS DEL ÁLBUM */}
+      <h2 className="mt-10 font-semibold text-[var(--color-cocoa-deep)]">
+        Fotos del álbum ({photos.length})
+      </h2>
+
+      <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
+        {photos.map((p) => (
+          <div key={p.id} className="relative">
+            <img
+              src={thumb(p.url)}
+              alt={`Foto de ${p.uploaderName}`}
+              className="aspect-square w-full rounded-lg object-cover"
+              loading="lazy"
+            />
+            <button
+              onClick={() => borrarFoto(p)}
+              aria-label="Borrar foto"
+              className="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-sm shadow"
+            >
+              🗑️
+            </button>
+            <p className="mt-1 truncate text-xs text-[var(--color-cocoa)]/70">
+              {p.uploaderName}
+            </p>
+          </div>
+        ))}
+      </div>
     </main>
   );
 }
