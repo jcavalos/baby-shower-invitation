@@ -5,7 +5,7 @@ service cloud.firestore {
     // ⚠️ Cambia por el correo con el que creaste tu usuario admin.
     // (No basta "estar logueado": cualquiera podría registrarse.)
     function isAdmin() {
-      return request.auth != null && request.auth.token.email == 'TU_CORREO@gmail.com';
+      return request.auth != null && request.auth.token.email == 'juan.carlos.avalos@outlook.com';
     }
 
     // Una familia solo se lee conociendo su link único; la lista completa solo el admin.
